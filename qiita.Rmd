@@ -50,7 +50,7 @@ md %>%
   imap(
     function(x, y) {
       set_names(
-        x, function(x) str_replace(x, '.*/', paste0(y, '/'))
+        x, file.path(y, basename(x))
       )
     }
   ) %>%
