@@ -15,7 +15,7 @@ jsonlite::write_json(x, paste0(user, '.json'))
 ## Extract data from json
 
 ```{r}
-titles <- map_chr(x, 'title')
+titles <- map_chr(x, 'title') %>% map_chr(str_remove_all, pattern = "[/:\"]")
 dirs <- file.path('md', titles)
 walk(dirs, dir.create, showWarnings = FALSE, recursive = TRUE)
 md <- map(x, 'body')
