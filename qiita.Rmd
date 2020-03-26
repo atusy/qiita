@@ -56,5 +56,5 @@ md %>%
   ) %>%
   unname %>%
   unlist() %>%
-  iwalk(download.file)
+  iwalk(download.file, mode = "wb")
 ```
