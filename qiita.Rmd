@@ -1,0 +1,60 @@
+```{r setup}
+user = 'Atsushi776'
+library(tidyverse)
+library(jsonlite)
+```
+
+
+# GET
+
+```{r}
+x <- jsonlite::read_json(paste0('https://qiita.com//api/v2/users/', user, '/items?per_page=100'))
+jsonlite::write_json(x, paste0(user, '.json'))
+```
+
+## Extract data from json
+
+```{r}
+titles <- map_chr(x, 'title')
+dirs <- file.path('md', titles)
+walk(dirs, dir.create, showWarnings = FALSE, recursive = TRUE)
+md <- map(x, 'body')
+```
+
+## Save markdown files
+
+```{r}
+md %>%
+  map2(
+    dirs,
+    ~ str_replace_all(
+      .x,
+      'https://qiita-image-store.s3.amazonaws.com/.*/(.*\\.png)',
+      file.path(.y, '\\1')
+    )
+  ) %>%
+  walk2(
+    file.path(dirs, 'index.md'),
+    readr::write_lines
+  )
+```
+
+
+## Download images
+
+```{r}
+md %>%
+  str_extract_all('https://qiita-image-store.s3.amazonaws.com/.*\\.png') %>%
+  setNames(dirs) %>%
+  keep(function(x) length(x) > 0) %>%
+  imap(
+    function(x, y) {
+      set_names(
+        x, function(x) str_replace(x, '.*/', paste0(y, '/'))
+      )
+    }
+  ) %>%
+  unname %>%
+  unlist() %>%
+  iwalk(download.file)
+```
